@@ -424,7 +424,7 @@ class BasePredictor:
 
 
         cv2.imshow(p, im)
-        self.process.stdin.write(im.tobytes())
+        self.process.stdin.write(im[:,:,::-1].tobytes())
         cv2.waitKey(300 if self.dataset.mode == "image" else 1)  # 1 millisecond
 
     def run_callbacks(self, event: str):

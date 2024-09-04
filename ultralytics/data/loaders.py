@@ -19,7 +19,7 @@ from ultralytics.data.utils import IMG_FORMATS, VID_FORMATS
 from ultralytics.utils import LOGGER, is_colab, is_kaggle, ops
 from ultralytics.utils.checks import check_requirements
 
-
+from global_vars import flag
 @dataclass
 class SourceTypes:
     """Class to represent various types of input sources for predictions."""
@@ -178,7 +178,7 @@ class LoadStreams:
         for i, x in enumerate(self.imgs):
             # Wait until a frame is available in each buffer
             while not x:
-                if not self.threads[i].is_alive() or cv2.waitKey(1) == ord("q") or self.vid_stride == -1:  # q to quit
+                if not self.threads[i].is_alive() or cv2.waitKey(1) == ord("q") or flag[0] == False:  # q to quit
                     LOGGER.warning(f"WARNING ⚠️ you have pressed 'q' to quit or thread has been stopped.")
                     self.close()
                     raise StopIteration
