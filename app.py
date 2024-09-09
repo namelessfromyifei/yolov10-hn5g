@@ -9,9 +9,11 @@ def process_data():
     print(f"started-------------------------------------------")
     model = YOLOv10('weights/yolov10b.pt')
     # model -> predictor -> build -> loaders
-    model.predict(source='rtmp://127.0.0.1/live/test',
+    model.predict(source='rtmp://192.168.4.56/live/test',
                   vid_stride=2,
-                  stream_buffer=True,
+                  stream_buffer=False,
+                  output_stream=True,
+                  output_stream_source="rtmp://192.168.4.56/live2/test",
                   conf=0.6,
                   show=True, verbose=False, save=False, save_txt=False, save_crop=False)
     print(f"stopped-------------------------------------------")

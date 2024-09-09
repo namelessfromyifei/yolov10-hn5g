@@ -245,9 +245,11 @@ class BasePredictor:
                 self.model.warmup(imgsz=(1 if self.model.pt or self.model.triton else self.dataset.bs, 3, *self.imgsz))
                 self.done_warmup = True
 
-            if self.args.show and self.dataset.source_type.stream:
+            if self.args.output_stream and self.dataset.source_type.stream:
+                if self.args.output_stream_source is None:
+                    raise ValueError(f"while output_stream is True, output_stream_source should be defined")
                 stream = ffmpeg.input('pipe:', format='rawvideo', pix_fmt='rgb24', s=f"{self.dataset.shape[0][1]}x{self.dataset.shape[0][0]}")
-                stream = ffmpeg.output(stream, "rtmp://127.0.0.1/live2/test", format='flv')
+                stream = ffmpeg.output(stream, self.args.output_stream_source, format='flv')
                 self.process = stream.run_async(pipe_stdin=True)
 
             self.seen, self.windows, self.batch = 0, [], None
@@ -381,6 +383,8 @@ class BasePredictor:
             result.save_crop(save_dir=self.save_dir / "crops", file_name=self.txt_path.stem)
         if self.args.show:
             self.show(str(p))
+        if self.args.output_stream:
+            self.output_stream()
         if self.args.save:
             self.save_predicted_images(str(self.save_dir / (p.name or "tmp.jpg")), frame)
 
@@ -413,6 +417,11 @@ class BasePredictor:
         # Save images
         else:
             cv2.imwrite(save_path, im)
+
+    def output_stream(self):
+        im = self.plotted_img
+        self.process.stdin.write(im[:, :, ::-1].tobytes())
+        cv2.waitKey(300 if self.dataset.mode == "image" else 1)  # 1 millisecond
 
     def show(self, p=""):
         """Display an image in a window using OpenCV imshow()."""
