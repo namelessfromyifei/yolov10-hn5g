@@ -289,7 +289,7 @@ class BasePredictor:
                         "inference": profilers[1].dt * 1e3 / n,
                         "postprocess": profilers[2].dt * 1e3 / n,
                     }
-                    if self.args.verbose or self.args.save or self.args.save_txt or self.args.show:
+                    if self.args.verbose or self.args.save or self.args.save_txt or self.args.show or self.args.output_stream:
                         # 对每张图片进行处理并展示或保存结果
                         # i:一个批次中的第几张图像
                         # Path(paths[i])图像的路径对象
@@ -367,7 +367,7 @@ class BasePredictor:
         string += result.verbose() + f"{result.speed['inference']:.1f}ms"
 
         # Add predictions to image
-        if self.args.save or self.args.show:
+        if self.args.save or self.args.show or self.args.output_stream:
             self.plotted_img = result.plot(
                 line_width=self.args.line_width,
                 boxes=self.args.show_boxes,
@@ -433,7 +433,6 @@ class BasePredictor:
 
 
         cv2.imshow(p, im)
-        self.process.stdin.write(im[:,:,::-1].tobytes())
         cv2.waitKey(300 if self.dataset.mode == "image" else 1)  # 1 millisecond
 
     def run_callbacks(self, event: str):

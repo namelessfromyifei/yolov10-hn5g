@@ -9,13 +9,13 @@ def process_data():
     print(f"started-------------------------------------------")
     model = YOLOv10('weights/yolov10b.pt')
     # model -> predictor -> build -> loaders
-    model.predict(source='rtmp://192.168.4.56/live/test',
-                  vid_stride=2,
-                  stream_buffer=False,
+    model.predict(source='rtmp://10.129.175.76:1936/live/test',
+                  vid_stride=1,
+                  stream_buffer=True,
                   output_stream=True,
-                  output_stream_source="rtmp://192.168.4.56/live2/test",
+                  output_stream_source="rtmp://10.129.175.76:1936/live2/test",
                   conf=0.6,
-                  show=True, verbose=False, save=False, save_txt=False, save_crop=False)
+                  show=False, verbose=False, save=False, save_txt=False, save_crop=False)
     print(f"stopped-------------------------------------------")
 
 thread = None
@@ -49,3 +49,6 @@ def stop_stream():
     flag[0] = False
     thread = None
     return 'stop stream!'
+
+if __name__ == '__main__':
+    app.run(port=7777, debug=False)
