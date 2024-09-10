@@ -1,1 +1,1 @@
-flag = [True]
+flag = {}

@@ -62,7 +62,7 @@ class LoadStreams:
          ```
     """
 
-    def __init__(self, sources="file.streams", vid_stride=1, buffer=False):
+    def __init__(self, sources="file.streams", vid_stride=1, buffer=False, sn=""):
         """Initialize instance variables and check for consistent input stream shapes."""
         # 设置PyTorch的CuDNN后端为基准模式（benchmark mode）。在基准模式下，CuDNN会自动选择最快的卷积算法，
         # 这对于固定大小的输入非常有效，可以显著提高推理速度
@@ -71,6 +71,7 @@ class LoadStreams:
         self.running = True  # running flag for Thread
         self.mode = "stream"
         self.vid_stride = vid_stride  # video frame-rate stride
+        self.sn = sn
 
         #
         sources = Path(sources).read_text().rsplit() if os.path.isfile(sources) else [sources]
@@ -178,7 +179,7 @@ class LoadStreams:
         for i, x in enumerate(self.imgs):
             # Wait until a frame is available in each buffer
             while not x:
-                if not self.threads[i].is_alive() or cv2.waitKey(1) == ord("q") or flag[0] == False:  # q to quit
+                if not self.threads[i].is_alive() or cv2.waitKey(1) == ord("q") or flag[self.sn] == False:  # q to quit
                     LOGGER.warning(f"WARNING ⚠️ you have pressed 'q' to quit or thread has been stopped.")
                     self.close()
                     raise StopIteration

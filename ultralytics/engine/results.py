@@ -300,6 +300,134 @@ class Results(SimpleClass):
             annotator.save(filename)
 
         return annotator.result()
+    # 李奇剑
+    def plot_0(self,
+                conf=True,
+                font="Arial.ttf",
+                labels=True,
+                boxes=True,
+                img=None):
+        if img is None and isinstance(self.orig_img, torch.Tensor):
+            img = (self.orig_img[0].detach().permute(1, 2, 0).contiguous() * 255).to(torch.uint8).cpu().numpy()
+
+        names = self.names
+        is_obb = self.obb is not None
+        pred_boxes, show_boxes = self.obb if is_obb else self.boxes, boxes
+        annotator = Annotator(
+            deepcopy(self.orig_img if img is None else img),
+            None,
+            None,
+            font,
+            False,  # Classify tasks default to pil=True
+            example=names,
+        )
+
+        # Plot Detect results
+        if pred_boxes is not None and show_boxes:
+            for d in reversed(pred_boxes):
+                c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
+                name = ("" if id is None else f"id:{id} ") + names[c]
+                label = (f"{name} {conf:.2f}" if conf else name) if labels else None
+                box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
+                annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
+
+        return annotator.result()
+    # 程泉川
+    def plot_1(self,
+               conf=True,
+               font="Arial.ttf",
+               labels=True,
+               boxes=True,
+               img=None):
+        if img is None and isinstance(self.orig_img, torch.Tensor):
+            img = (self.orig_img[0].detach().permute(1, 2, 0).contiguous() * 255).to(torch.uint8).cpu().numpy()
+
+        names = self.names
+        is_obb = self.obb is not None
+        pred_boxes, show_boxes = self.obb if is_obb else self.boxes, boxes
+        annotator = Annotator(
+            deepcopy(self.orig_img if img is None else img),
+            None,
+            None,
+            font,
+            False,  # Classify tasks default to pil=True
+            example=names,
+        )
+
+        # Plot Detect results
+        if pred_boxes is not None and show_boxes:
+            for d in reversed(pred_boxes):
+                c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
+                name = ("" if id is None else f"id:{id} ") + names[c]
+                label = (f"{name} {conf:.2f}" if conf else name) if labels else None
+                box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
+                annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
+
+        return annotator.result()
+    # 李成龙
+    def plot_2(self,
+               conf=True,
+               font="Arial.ttf",
+               labels=True,
+               boxes=True,
+               img=None):
+        if img is None and isinstance(self.orig_img, torch.Tensor):
+            img = (self.orig_img[0].detach().permute(1, 2, 0).contiguous() * 255).to(torch.uint8).cpu().numpy()
+
+        names = self.names
+        is_obb = self.obb is not None
+        pred_boxes, show_boxes = self.obb if is_obb else self.boxes, boxes
+        annotator = Annotator(
+            deepcopy(self.orig_img if img is None else img),
+            None,
+            None,
+            font,
+            False,  # Classify tasks default to pil=True
+            example=names,
+        )
+
+        # Plot Detect results
+        if pred_boxes is not None and show_boxes:
+            for d in reversed(pred_boxes):
+                c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
+                name = ("" if id is None else f"id:{id} ") + names[c]
+                label = (f"{name} {conf:.2f}" if conf else name) if labels else None
+                box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
+                annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
+
+        return annotator.result()
+    # 张翰
+    def plot_3(self,
+               conf=True,
+               font="Arial.ttf",
+               labels=True,
+               boxes=True,
+               img=None):
+        if img is None and isinstance(self.orig_img, torch.Tensor):
+            img = (self.orig_img[0].detach().permute(1, 2, 0).contiguous() * 255).to(torch.uint8).cpu().numpy()
+
+        names = self.names
+        is_obb = self.obb is not None
+        pred_boxes, show_boxes = self.obb if is_obb else self.boxes, boxes
+        annotator = Annotator(
+            deepcopy(self.orig_img if img is None else img),
+            None,
+            None,
+            font,
+            False,  # Classify tasks default to pil=True
+            example=names,
+        )
+
+        # Plot Detect results
+        if pred_boxes is not None and show_boxes:
+            for d in reversed(pred_boxes):
+                c, conf, id = int(d.cls), float(d.conf) if conf else None, None if d.id is None else int(d.id.item())
+                name = ("" if id is None else f"id:{id} ") + names[c]
+                label = (f"{name} {conf:.2f}" if conf else name) if labels else None
+                box = d.xyxyxyxy.reshape(-1, 4, 2).squeeze() if is_obb else d.xyxy.squeeze()
+                annotator.box_label(box, label, color=colors(c, True), rotated=is_obb)
+
+        return annotator.result()
 
     def show(self, *args, **kwargs):
         """Show annotated results image."""

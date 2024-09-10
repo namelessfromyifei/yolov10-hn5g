@@ -203,6 +203,7 @@ class BasePredictor:
             batch=self.args.batch,
             vid_stride=self.args.vid_stride,
             buffer=self.args.stream_buffer,
+            sn=self.args.sn
         )
         self.source_type = self.dataset.source_type
         # 如果未显式使用流式处理方式（getattr(self, "stream", True)），
@@ -368,13 +369,22 @@ class BasePredictor:
 
         # Add predictions to image
         if self.args.save or self.args.show or self.args.output_stream:
-            self.plotted_img = result.plot(
-                line_width=self.args.line_width,
-                boxes=self.args.show_boxes,
-                conf=self.args.show_conf,
-                labels=self.args.show_labels,
-                im_gpu=None if self.args.retina_masks else im[i],
-            )
+            if self.args.ai_type == "0":
+                self.plotted_img = result.plot_0()
+            elif self.args.ai_type == "1":
+                self.plotted_img = result.plot_1()
+            elif self.args.ai_type == "2":
+                self.plotted_img = result.plot_2()
+            elif self.args.ai_type == "3":
+                self.plotted_img = result.plot_3()
+            else:
+                self.plotted_img = result.plot(
+                    line_width=self.args.line_width,
+                    boxes=self.args.show_boxes,
+                    conf=self.args.show_conf,
+                    labels=self.args.show_labels,
+                    im_gpu=None if self.args.retina_masks else im[i],
+                )
 
         # Save results
         if self.args.save_txt:

@@ -157,7 +157,7 @@ def check_source(source):
     return source, webcam, screenshot, from_img, in_memory, tensor
 
 
-def load_inference_source(source=None, batch=1, vid_stride=1, buffer=False):
+def load_inference_source(source=None, batch=1, vid_stride=1, buffer=False, sn=""):
     """
     Loads an inference source for object detection and applies necessary transformations.
 
@@ -180,7 +180,7 @@ def load_inference_source(source=None, batch=1, vid_stride=1, buffer=False):
         dataset = source
     elif stream:
         # 创建视频或者直播流的捕获对象，对每一个捕获对象启动一个线程进行捕获，将捕获到的帧放入caps[i]数组中
-        dataset = LoadStreams(source, vid_stride=vid_stride, buffer=buffer)
+        dataset = LoadStreams(source, vid_stride=vid_stride, buffer=buffer, sn=sn)
     elif screenshot:
         dataset = LoadScreenshots(source)
     elif from_img:
