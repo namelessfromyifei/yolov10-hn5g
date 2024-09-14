@@ -178,8 +178,13 @@ class LoadStreams:
         images = []
         for i, x in enumerate(self.imgs):
             # Wait until a frame is available in each buffer
+            if flag[self.sn] == False:
+                LOGGER.warning(f"WARNING ⚠️ dock {self.sn} detecting has been stopped manually.")
+                self.close()
+                raise StopIteration
+
             while not x:
-                if not self.threads[i].is_alive() or cv2.waitKey(1) == ord("q") or flag[self.sn] == False:  # q to quit
+                if not self.threads[i].is_alive() or cv2.waitKey(1) == ord("q"):  # q to quit
                     LOGGER.warning(f"WARNING ⚠️ you have pressed 'q' to quit or thread has been stopped.")
                     self.close()
                     raise StopIteration

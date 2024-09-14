@@ -1,10 +1,34 @@
-from flask import Flask, request
+from flask import Flask, request, jsonify
 from ultralytics import YOLOv10
 import threading
-from global_vars import flag
+from global_vars import flag, announceDir
 import time
-
+from flask_sock import Sock
+from MqttClient import MqttConnection
+from flask_cors import CORS
 app = Flask(__name__)
+CORS(app)
+sock = Sock(app)
+app.config['SOCK_SERVER_OPTIONS'] = {'ping_interval': 25}
+app.config['MQTT_BROKER_URL'] = 'broker.emqx.io'
+app.config['MQTT_BROKER_PORT'] = 1883
+app.config['MQTT_BROKER_USERNAME'] = ''
+app.config['MQTT_BROKER_PASSWORD'] = ''
+app.config['MQTT_KEEPALIVE'] = 60
+app.config['MQTT_TLS_ENABLED'] = False
+topic = 'hn5g/info'
+mqtt_conn = MqttConnection()
+mqtt_conn.connect(app)
+mqtt_client = MqttConnection().client
+
+def check_announce(sn):
+    if sn not in announceDir:
+        announceDir[sn] = {'target':'bottles','count':0, 'announce':False, 'msg':'bottles in video!!!!'}
+    while flag[sn]:
+        time.sleep(1)
+        # print(announceDir[sn]['count'],"-",announceDir[sn]['target'])
+        if announceDir[sn]['announce']:
+            mqtt_client.publish(f'hn5g/info/{sn}', announceDir[sn]['msg'])
 
 def process_data(source, output_stream_source, ai_type, sn):
     print(f"{sn} started-------------------------------------------")
@@ -19,34 +43,59 @@ def process_data(source, output_stream_source, ai_type, sn):
     else:
         model = YOLOv10('weights/yolov10b.pt')
 
+    thread_check = threading.Thread(target=check_announce, args=(sn, ))
+    thread_check.start()
+
     # model -> predictor -> build -> loaders
     print(f"source: {source}, output_stream_source: {output_stream_source}, type: {ai_type}, sn: {sn}")
     model.predict(source=source,
-                  vid_stride=25,
+                  vid_stride=20,
                   stream_buffer=False,
                   output_stream=True,
                   output_stream_source=output_stream_source,
                   ai_type=ai_type,
                   sn=sn,
                   conf=0.6,
-                  show=True, verbose=False, save=False, save_txt=False, save_crop=False)
+                  show=False, verbose=False, save=False, save_txt=False, save_crop=False)
     # while flag[sn]:
     #     print(f"{sn} is running")
     #     time.sleep(1)
     print(f"{sn} stopped-------------------------------------------")
 
-thread = {}
+def return_stream_status(ws):
+    keys_str = ""
+    values_str = ""
+    for key, value in flag.items():
+        keys_str += f'{key: <10}'  # 调整占位宽度，10 可以根据实际情况修改
+        value = "running" if value else "stopped"
+        values_str += f'{value: <10}'
 
+    result_str = keys_str + '\n' + values_str
+    ws.send(f"{result_str}")
+
+thread = {}
+flag = flag
 @app.route('/')
 def hello_world():
     return 'Hello World!'
 
+@sock.route('/status')
+def status(ws):
+    while True:
+        time.sleep(1)
+        return_stream_status(ws)
 @app.route('/test', methods=['GET', 'POST'])
 def test():
     print(request.args.get("source"))
     print(request.args.get("output_stream_source"))
     print(request.args.get("type"))
-    return "test"
+    return jsonify({"result": 1, "data": ""})
+
+@app.route('/clear_announce')
+def clear_announce():
+    sn = request.args.get("sn")
+    announceDir[sn]['announce'] = False
+    return jsonify({"result": 1, "data": f"{sn} announce stopped!"})
 
 @app.route('/start', methods=['GET', 'POST'])
 def start_stream():
@@ -70,7 +119,7 @@ def start_stream():
         print(f"thread {sn} alive？:::{thread[sn].is_alive()}")
         thread[sn] = None
         return 'something error, please start again!'
-    return 'start stream!'
+    return jsonify({"result": 1, "data": "start stream!"})
 
 @app.route('/stop', methods=['GET', 'POST'])
 def stop_stream():
@@ -86,4 +135,4 @@ def stop_stream():
     return f'stop {sn} stream!'
 
 if __name__ == '__main__':
-    app.run(port=7777, debug=False)
+    app.run(debug=True, host='0.0.0.0')

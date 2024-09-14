@@ -38,6 +38,7 @@ import cv2
 import numpy as np
 import torch
 import ffmpeg
+from PIL.ImageOps import scale
 
 from ultralytics.cfg import get_cfg, get_save_dir
 from ultralytics.data import load_inference_source
@@ -49,6 +50,8 @@ from ultralytics.utils.files import increment_path
 from ultralytics.utils.torch_utils import select_device, smart_inference_mode
 
 import math
+from MqttClient import MqttConnection
+from global_vars import announceDir
 
 STREAM_WARNING = """
 WARNING ⚠️ inference results will accumulate in RAM unless `stream=True` is passed, causing potential out-of-memory
@@ -249,8 +252,18 @@ class BasePredictor:
             if self.args.output_stream and self.dataset.source_type.stream:
                 if self.args.output_stream_source is None:
                     raise ValueError(f"while output_stream is True, output_stream_source should be defined")
-                stream = ffmpeg.input('pipe:', format='rawvideo', pix_fmt='rgb24', s=f"{self.dataset.shape[0][1]}x{self.dataset.shape[0][0]}")
-                stream = ffmpeg.output(stream, self.args.output_stream_source, format='flv')
+                stream = ffmpeg.input('pipe:',
+                                      format='rawvideo',
+                                      pix_fmt='rgb24',
+                                      s=f"{(self.dataset.shape[0][1])}x{(self.dataset.shape[0][0])}",
+                                      r=self.dataset.fps[0])
+                stream = ffmpeg.output(stream,
+                                       self.args.output_stream_source,
+                                       # vcodec='libx264',
+                                       format='flv',
+                                       # tune='zerolatency',
+                                       # g=15,
+                                       bitrate=2985984000)
                 self.process = stream.run_async(pipe_stdin=True)
 
             self.seen, self.windows, self.batch = 0, [], None
@@ -366,6 +379,16 @@ class BasePredictor:
         result.save_dir = self.save_dir.__str__()  # used in other locations
         # '0: 480x640 3 fires, 19066.8ms'
         string += result.verbose() + f"{result.speed['inference']:.1f}ms"
+        string_result = result.verbose()
+
+        # print(string_result)
+        target_str = str(announceDir[self.args.sn]['target'])
+        if target_str in string_result:
+            announceDir[self.args.sn]['count'] = announceDir[self.args.sn]['count'] + 1
+            if announceDir[self.args.sn]['count'] > 10:
+                announceDir[self.args.sn]['announce'] = True
+        else:
+            announceDir[self.args.sn]['count'] = 0
 
         # Add predictions to image
         if self.args.save or self.args.show or self.args.output_stream:
